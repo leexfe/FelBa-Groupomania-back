@@ -26,11 +26,11 @@ postRouter.use(checkToken);
 //Routes destinées qui permet l'exécution de fonctions associée à son chemin propre pour créer et manipuler des données appelées depuis le DOM:
 
 postRouter.get("/", getPosts);
-postRouter.put("/:id", imageUpload, updatePostById); //à faire
+postRouter.put("/:id", imageUpload, updatePostById); 
 postRouter.post("/:id", createComment);
 postRouter.delete("/:id", deletePostById);
 
 postRouter.post("/", imageUpload, createPosts);
-postRouter.post("/:id/like", likePost); //à faire
+postRouter.post("/:id/like", likePost); 
 
 module.exports = { postRouter };
