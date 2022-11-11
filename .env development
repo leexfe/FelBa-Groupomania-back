@@ -1,0 +1,7 @@
+//fichier .env explicatif (non caché) pour mettre en place l'application: 
+
+process.env.PORT=your_port
+APP_URL = your_url
+MDP=your_secret_password_for_jwt_encoding
+
+DATABASE_URL='mysql://22dlflfwo697cqnps54k:pscale_pw_t9RPO4OgH5GLDgQVQrCvCxUxyJayKu0nY9zgPHGjeGz@us-east.connect.psdb.cloud/groupomaniadb?sslaccept=strict'

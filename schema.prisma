@@ -1,0 +1,79 @@
+//Prisma est une interface CLI qui permet de faciliter la communication avec la bdd stockée sur le site hebergeur MySQL
+//Prisma sépare les modèles de base de données de notre code
+//Boîte à outils de base de données
+//fait correspondre les tables de notre base de données aux classes du langage qu'on utilise
+//Un ORM est un ensemble de classes permettant de manipuler les tables d'une base de données relationnelle comme s'il s'agissait d'objets
+
+//fichier de configuration schema.prisma :
+
+// Générateur Prisma Client
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["referentialIntegrity"]
+}
+
+// Source de données nommée prisma :
+datasource db {
+  provider             = "mysql"
+  url                  = env("DATABASE_URL")
+  referentialIntegrity = "prisma"
+}
+
+model User {
+  id         Int         @id @default(autoincrement())
+  email      String      @unique
+  // admin    String
+  password   String
+  posts      Post[] //Relation one to many // Un user peut avoir plusieurs posts//le user a une colonne posts qui correspond à un array Post  
+  comments   Comment[]
+  isAdmin    Boolean     @default(false)
+  usersLiker Userliker[]
+}
+
+model Post {
+  id            Int         @id @default(autoincrement()) //la base de donnée genere l'id elle meme via Planetscale
+  // email    String @unique
+  content       String
+  imageUrl      String? //? pour image optionnelle
+  userIdPosting Int //sera relié à user (relation)
+  user          User        @relation(fields: [userIdPosting], references: [id]) //reference à l'id du user dans la bdd de User et donc connecte les deux tables ensemble et comprendra que userPostingId est l'id d'un User
+  comments      Comment[]
+  createdAt     DateTime    @default(now()) //permet de classer  par ordre de creation en fonction de la date
+  likes         Int         @default(0)
+  usersLiker    Userliker[]
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement()) //géré par bdd prisma
+  content   String //on passe un content
+  postId    Int // on passe un postId
+  post      Post     @relation(fields: [postId], references: [id]) //l'entrée  pourl'id d'un post//géré par bdd prisma
+  createdAt DateTime @default(now()) //géré par bdd prisma
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model Userliker {
+    id Int @id @default(autoincrement())
+
+  userIdLiked Int  
+  user        User @relation(fields: [userIdLiked], references: [id])
+
+  postIdLiked Int // on passe un postId
+  post        Post @relation(fields: [postIdLiked], references: [id])
+
+      @@unique([id,userIdLiked,postIdLiked])
+
+ 
+
+  //  @@id([userIdLiked,postIdLiked])
+}
+
+
+ //https://www.prisma.io/docs/guides/general-guides/database-workflows/unique-constraints-and-indexes/mysql
+
+//exemple :
+// ALTER TABLE `UniqueDemo`.`TheLastUser` ADD CONSTRAINT `TheLastUser_firstName_lastName_unique_constraint` UNIQUE (`firstName`, `lastName`);
+
+// application:
+// ALTER TABLE `Userliker` ADD CONSTRAINT `Userliker_userIdPosted_postIdLiked_unique_constraint` UNIQUE (`userIdPosted`, `postIdLiked`);
