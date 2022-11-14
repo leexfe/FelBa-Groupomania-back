@@ -8,13 +8,7 @@ async function getPosts(req, res) {
   //Pour chaque post , passe les comments et le user, ne select que l'email
   const posts = await prisma.post.findMany({
     include: {
-      user: {
-        select: {
-          likes: true,
-        },
-      },
-      usersLiker: {
-      },
+      usersLiker: {},
       comments: {
         include: {
           user: {
@@ -27,6 +21,7 @@ async function getPosts(req, res) {
       user: {
         select: {
           email: true,
+          id: true,
         },
       },
     },
@@ -51,7 +46,6 @@ async function createPosts(req, res) {
     const post = {
       content,
       userIdPosting: userIdPosting,
-      // usersLiker: "",
     };
     //appelle la fonction makeImageUrlToPost avec req et post en argument:
     makeImageUrlToPost(req, post);
@@ -95,13 +89,13 @@ async function deletePostById(req, res) {
       },
     });
     if (userId === post.userIdPosting || checkAdmin.isAdmin === true) {
-    if (post.imageUrl) {
-      const filename = post.imageUrl.split("/").pop();
-      fs.unlink(`uploads/${filename}`, () => {
-        prisma.post.delete({ where: { id: postId } });
-      });
+      if (post.imageUrl) {
+        const filename = post.imageUrl.split("/").pop();
+        fs.unlink(`uploads/${filename}`, () => {
+          prisma.post.delete({ where: { id: postId } });
+        });
+      }
     }
-  }   
     if (post === null) {
       return res.status(404).send({ error: "Post non trouvé" });
     }
@@ -113,7 +107,7 @@ async function deletePostById(req, res) {
   } catch (err) {
     res.status(500).send({ error: "Erreur serveur" });
   }
-}      
+}
 //Met à jour le contenu textuel et/ou la nouvelle image selectionnée du postId sélectionné:
 async function updatePostById(req, res) {
   const postId = Number(req.params.id);
@@ -139,14 +133,14 @@ async function updatePostById(req, res) {
           prisma.post.delete({ where: { id: postId } });
         });
       }
-    }  
+    }
     // Si contenu dans req.body.content existe, attribue la nouvelle valeur du req.body.content à post.content:
     if (req.body.content) {
       post.content = req.body.content;
     }
     // Appelle fonction  makeImageUrlToPost avec req et post en argument:
     makeImageUrlToPost(req, post);
-   
+
     //Attend de mettre à jour le nouveau contenu textuel et/ou la nouvelle image puis stocke la data dans la variable resolve :
     const resolve = await prisma.post.update({
       where: {
@@ -203,20 +197,20 @@ async function createComment(req, res) {
 // Notifie like ou unlike le Post cliqué par l'utilisateur :
 async function likePost(req, res) {
   try {
-   // récupère le userId et le postId sur la requète:
+    // récupère le userId et le postId sur la requète:
     const userLiker = Number(req.userId);
     const postId = Number(req.params.id);
- // retrouve le même user dans la bdd qui a liké le même Post:
+    // retrouve le même user dans la bdd qui a liké le même Post:
     const user = await prisma.userliker.findFirst({
       where: { userIdLiked: userLiker, postIdLiked: postId },
     });
-// si le même user existe dans la bdd alors on le supprime :
+    // si le même user existe dans la bdd alors on le supprime :
     if (user) {
       const deleteUser = await prisma.userliker.deleteMany({
         where: { userIdLiked: userLiker, postIdLiked: postId },
       });
       res.status(200).send({ message: "vous n'aimez plus ce post" });
-    } 
+    }
     //sinon on créer le user dans la bdd:
     else {
       const createLiker = await prisma.userliker.create({
@@ -244,5 +238,3 @@ module.exports = {
   updatePostById,
   likePost,
 };
-
-
