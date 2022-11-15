@@ -126,20 +126,20 @@ async function updatePostById(req, res) {
         },
       },
     });
-    if (userId === post.userIdPosting || checkAdmin.isAdmin === true) {
-      if (post.imageUrl) {
-        const filename = post.imageUrl.split("/").pop();
-        fs.unlink(`uploads/${filename}`, () => {
-          prisma.post.delete({ where: { id: postId } });
-        });
-      }
-    }
-    // Si contenu dans req.body.content existe, attribue la nouvelle valeur du req.body.content à post.content:
-    if (req.body.content) {
+if(req.file){
+    if (post.imageUrl) {
+      const filename = post.imageUrl.split("/").pop();
+      fs.unlink(`uploads/${filename}`, () => {
+        prisma.post.delete({ where: { id: postId } });
+      });
+         // Appelle fonction  makeImageUrlToPost avec req et post en argument:
+      makeImageUrlToPost(req, post);
+     }}
+        // Si contenu dans req.body.content existe, attribue la nouvelle valeur du req.body.content à post.content:
+     if (req.body.content) {
       post.content = req.body.content;
+      console.log('content: ',post.content);
     }
-    // Appelle fonction  makeImageUrlToPost avec req et post en argument:
-    makeImageUrlToPost(req, post);
 
     //Attend de mettre à jour le nouveau contenu textuel et/ou la nouvelle image puis stocke la data dans la variable resolve :
     const resolve = await prisma.post.update({
