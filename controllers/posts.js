@@ -1,6 +1,6 @@
 const { prisma } = require("../db/db");
-// const token = require("../middleware/token");
-const fs = require("fs"); // supprimer image stockeé localement dans uploads
+ // importe librairie filesystem pour supprimer image stockeé localement dans uploads
+const fs = require("fs"); 
 
 // Récupérer tout les posts et leurs commentaires associés :
 async function getPosts(req, res) {
@@ -113,6 +113,7 @@ async function updatePostById(req, res) {
   const postId = Number(req.params.id);
   try {
     const userId = req.userId;
+    const checkAdmin = await prisma.user.findUnique({ where: { id: userId } });
     //retrouve l'id du Post d'origine:
     const post = await prisma.post.findUnique({
       where: {
@@ -126,21 +127,23 @@ async function updatePostById(req, res) {
         },
       },
     });
-if(req.file){
-    if (post.imageUrl) {
-      const filename = post.imageUrl.split("/").pop();
-      fs.unlink(`uploads/${filename}`, () => {
-        prisma.post.delete({ where: { id: postId } });
-      });
-         // Appelle fonction  makeImageUrlToPost avec req et post en argument:
-      makeImageUrlToPost(req, post);
-     }}
-        // Si contenu dans req.body.content existe, attribue la nouvelle valeur du req.body.content à post.content:
-     if (req.body.content) {
+    if (userId === post.userIdPosting || checkAdmin.isAdmin === true) {
+      if (req.file) {
+        if (post.imageUrl) {
+          const filename = post.imageUrl.split("/").pop();
+          fs.unlink(`uploads/${filename}`, () => {
+            prisma.post.delete({ where: { id: postId } });
+          });
+          // Appelle fonction  makeImageUrlToPost avec req et post en argument:
+          makeImageUrlToPost(req, post);
+        }
+      }
+    // Si contenu dans req.body.content existe, attribue la nouvelle valeur du req.body.content à post.content:
+    if (req.body.content) {
       post.content = req.body.content;
-      console.log('content: ',post.content);
+      console.log("content: ", post.content);
     }
-
+  }
     //Attend de mettre à jour le nouveau contenu textuel et/ou la nouvelle image puis stocke la data dans la variable resolve :
     const resolve = await prisma.post.update({
       where: {
